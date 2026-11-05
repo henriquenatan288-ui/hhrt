@@ -44,7 +44,7 @@ Os testes atuais usam JARs sintéticos/isolados para verificar classificação, 
 
     python -m unittest discover -s tests -v
 
-Eles não substituem testes com mods Fabric reais nem a validação oficial cargo horizon-mod check.
+Na validação local desta branch, os 10 testes de fixture passaram. Eles usam JARs sintéticos e não substituem testes com mods Fabric reais nem a validação oficial cargo horizon-mod check.
 
 ## Limitações conhecidas
 
