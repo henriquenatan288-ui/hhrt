@@ -2,49 +2,62 @@
 
 Experimentos de compatibilidade seletiva entre mods Fabric e o motor nativo do Horizon Launcher.
 
-## Estado do projeto
+> O HHRT não executa arquivos Fabric/Java. O objetivo é identificar o que pode ser carregado como conteúdo Horizon e separar o que exige portagem de código.
 
-O primeiro componente é o **HHRT Fabric Scanner**: um analisador estático de arquivos `.jar`.
-Ele lê metadados e estrutura do pacote sem carregar nem executar bytecode Java.
+## Componentes atuais
 
-## Fabric Scanner (v0.1.0)
+### 1. Fabric Scanner
 
-Requisitos: Python 3.11 ou superior. Não há dependências externas.
+Análise estática de arquivos JAR, sem carregar ou executar bytecode:
 
-Executar diretamente:
+- lê fabric.mod.json, IDs, versões e dependências;
+- identifica entrypoints e configurações/classes Mixin declaradas;
+- detecta classes Java, JARs aninhados e bibliotecas nativas;
+- inventaria arquivos em assets/ e data/;
+- gera relatório legível ou JSON.
 
-```bash
-python scanner/hhrt_scanner.py caminho/para/mod.jar
-```
+Executar:
 
-Gerar relatório JSON:
+    python scanner/hhrt_scanner.py caminho/para/mod.jar
+    python scanner/hhrt_scanner.py caminho/para/mod.jar --json
 
-```bash
-python scanner/hhrt_scanner.py caminho/para/mod.jar --json
-```
+### 2. Conversor de conteúdo Fabric para Horizon
 
-O scanner identifica:
+O conversor só aceita JARs classificados como resource_candidate. Ele:
 
-- metadados `fabric.mod.json`, IDs, versões e dependências;
-- entrypoints declarados;
-- configurações e classes Mixin declaradas;
-- classes Java, recursos e bibliotecas nativas;
-- caminhos suspeitos no arquivo ZIP, ignorados na análise.
+- copia somente arquivos assets/ e data/;
+- gera horizon-mod.toml com Content API 0.2;
+- registra namespaces adicionais;
+- recusa bytecode, entrypoints, Mixins, bibliotecas, dependências Fabric externas e namespaces reservados incompatíveis;
+- respeita limites de arquivos e tamanhos documentados pelo Horizon.
 
-### Classificações
+Executar:
 
-- `resource_candidate`: sem classes Java, entrypoints ou Mixins detectados; candidato a revisão/conversão de recursos.
-- `requires_port`: contém bytecode Java ou entrypoints e exige portagem.
-- `requires_port_or_incompatible`: declara Mixins e não pode ser executado diretamente no Horizon.
+    python converter/hhrt_convert.py caminho/para/mod.jar --output saida.hmod
+    python converter/hhrt_convert.py caminho/para/mod.jar --output saida.hmod --side client
 
-As classificações são heurísticas, não certificações. O scanner **não executa JARs**, não converte arquivos para `.hmod` e não resolve dependências.
+O campo --side aceita client, server ou both (padrão). Escolha o lado de acordo com a função do conteúdo; o padrão não é uma afirmação de que o mod foi validado em multiplayer.
 
-## Direção técnica
+## Testes
 
-1. Scanner e relatório de compatibilidade.
-2. Inventário e validação de recursos candidatos.
-3. Conversor seletivo para formatos suportados pelo Horizon.
-4. Adaptadores de código apenas quando houver API Horizon equivalente.
-5. Matriz de testes por versão do Horizon e do Minecraft, incluindo a meta futura 26.2.
+Os testes atuais usam JARs sintéticos/isolados para verificar classificação, recusa de código e geração da estrutura ZIP:
 
-O APK Horizon Android 0.7.7 é tratado como referência de análise, não como prova de que APIs documentadas em versões posteriores existam nessa build.
+    python -m unittest discover -s tests -v
+
+Eles não substituem testes com mods Fabric reais nem a validação oficial cargo horizon-mod check.
+
+## Limitações conhecidas
+
+- O conversor preserva recursos e dados; não reescreve bytecode nem traduz automaticamente os formatos ou comportamentos específicos de cada mod.
+- Dependências Fabric externas são recusadas, em vez de serem ignoradas silenciosamente.
+- O pacote produzido usa o formato documentado atualmente como Horizon Content API 0.2.
+- A documentação consultada atualmente descreve Minecraft 26.3. Isso não comprova compatibilidade com o APK Android 0.7.7 ou com a meta Minecraft 26.2.
+- Antes de instalar, valide o arquivo com cargo horizon-mod check na mesma revisão do Horizon que será usada. Não distribua o arquivo sem conferir o log do jogo.
+
+## Próximos marcos
+
+1. Testar com JARs Fabric reais, começando por mods estritamente de recursos e dados.
+2. Validar os pacotes gerados com o verificador oficial do Horizon.
+3. Comparar o comportamento/formatos entre Horizon 0.7.7, as fontes atuais e o alvo futuro 26.2.
+4. Só então ampliar a conversão para tipos de dados cuja equivalência esteja documentada.
+5. Tratar mods com código Java como portagens individuais para APIs Horizon, nunca como execução direta de JAR.
