@@ -61,3 +61,10 @@ Foi adicionada uma fixture de regressão baseada no manifesto do Witch Client pa
 3. Comparar o comportamento/formatos entre Horizon 0.7.7, as fontes atuais e o alvo futuro 26.2.
 4. Só então ampliar a conversão para tipos de dados cuja equivalência esteja documentada.
 5. Tratar mods com código Java como portagens individuais para APIs Horizon, nunca como execução direta de JAR.
+
+
+### Relatório de portabilidade: Witch Client 1.0.0
+
+A inspeção do Witch Client 1.0.0 (Minecraft 26.2) confirmou 113 classes Java, um entrypoint Fabric, uma configuração Mixin com 14 mixins client e 830 arquivos de recursos. A classificação é `requires_port_or_incompatible`: não pode ser convertido diretamente em `.hmod`. O relatório mapeia HUD, GUI, ESP, tracers, partículas, câmera, shaders, movimento e utilitários para candidatos de portagem no Horizon, com as limitações de versão/plataforma documentadas.
+
+Consulte [reports/witch-client-1.0.0-compatibility.md](reports/witch-client-1.0.0-compatibility.md).
