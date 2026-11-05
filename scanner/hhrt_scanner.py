@@ -11,13 +11,6 @@ from typing import Any
 
 MAX_ENTRIES = 100_000
 MAX_METADATA_BYTES = 2 * 1024 * 1024
-RESOURCE_PREFIXES = (
-    "assets/", "data/", "pack.mcmeta", "fabric.mod.json",
-    "LICENSE", "LICENSE.txt", "META-INF/"
-)
-CODE_SUFFIXES = (".class", ".jar", ".so", ".dll", ".dylib")
-
-
 class ScanError(Exception):
     pass
 
@@ -58,7 +51,10 @@ def scan_jar(path: str) -> dict[str, Any]:
         if "fabric.mod.json" not in safe_names:
             raise ScanError("fabric.mod.json não encontrado; arquivo não identificado como mod Fabric")
 
-        metadata = _read_json(zf, "fabric.mod.json")
+        try:
+            metadata = _read_json(zf, "fabric.mod.json")
+        except (ValueError, UnicodeDecodeError) as exc:
+            raise ScanError(f"fabric.mod.json inválido: {exc}") from exc
         mods = _as_mod_list(metadata)
         if not mods:
             raise ScanError("fabric.mod.json não contém um objeto de mod válido")
@@ -127,17 +123,29 @@ def scan_jar(path: str) -> dict[str, Any]:
         has_java_code = bool(all_classes)
         has_mixins = bool(mixin_configs)
         has_entrypoints = bool(entrypoints)
-        native_payloads = [n for n in safe_names if n.lower().endswith((".so", ".dll", ".dylib"))]
+        native_payloads = [
+            n for n in safe_names
+            if n.lower().endswith((".so", ".dll", ".dylib"))
+        ]
 
         if not has_java_code and not has_entrypoints and not has_mixins:
             classification = "resource_candidate"
-            explanation = "Não foram encontrados bytecode Java, entrypoints ou Mixins; revisar recursos antes de converter."
+            explanation = (
+                "Não foram encontrados bytecode Java, entrypoints ou Mixins; "
+                "revisar recursos antes de converter."
+            )
         elif has_mixins:
             classification = "requires_port_or_incompatible"
-            explanation = "Declara Mixins; não pode ser executado diretamente pelo runtime nativo do Horizon."
+            explanation = (
+                "Declara Mixins; não pode ser executado diretamente "
+                "pelo runtime nativo do Horizon."
+            )
         else:
             classification = "requires_port"
-            explanation = "Contém código Java ou entrypoints; exige análise e portagem para APIs Horizon."
+            explanation = (
+                "Contém código Java ou entrypoints; exige análise "
+                "e portagem para APIs Horizon."
+            )
 
         return {
             "scanner": {"name": "HHRT Fabric Scanner", "version": "0.1.0"},
