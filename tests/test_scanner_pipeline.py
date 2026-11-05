@@ -140,6 +140,49 @@ class FabricScannerPipelineTests(unittest.TestCase):
             with self.assertRaises(ConvertError):
                 convert_jar(jar, root / "out.hmod")
 
+
+    def test_witch_client_minecraft_26_2_requires_port(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            metadata = self.base_metadata(
+                id="witch",
+                version="1.0.0",
+                name="Witch Client",
+                environment="client",
+                mixins=["witch.mixins.json"],
+                entrypoints={"client": ["com.witch.WitchClient"]},
+                depends={
+                    "fabricloader": ">=0.19.0",
+                    "minecraft": "~26.2",
+                    "java": ">=25",
+                    "fabric-api": "*",
+                },
+            )
+            entries = {
+                "fabric.mod.json": metadata,
+                "witch.mixins.json": json.dumps({
+                    "required": False,
+                    "package": "com.witch.mixin",
+                    "compatibilityLevel": "JAVA_25",
+                    "client": ["CameraMixin", "GameRendererMixin", "SkyRendererMixin"],
+                    "injectors": {"defaultRequire": 0},
+                }).encode(),
+                "com/witch/WitchClient.class": b"fixture-class",
+                "com/witch/mixin/CameraMixin.class": b"fixture-mixin",
+                "assets/minecraft/textures/item/example.png": b"fixture-resource",
+            }
+            jar = self.make_jar(root, "witch-client-fixture.jar", entries)
+            report = scan_jar(str(jar))
+            self.assertEqual(report["mods"][0]["id"], "witch")
+            self.assertEqual(report["mods"][0]["depends"]["minecraft"], "~26.2")
+            self.assertEqual(
+                report["assessment"]["classification"],
+                "requires_port_or_incompatible",
+            )
+            self.assertFalse(report["assessment"]["direct_fabric_execution_supported"])
+            with self.assertRaises(ConvertError):
+                convert_jar(jar, root / "witch-client.hmod")
+
     def test_bad_jar_reports_scan_error(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "not-a-jar.jar"
