@@ -44,7 +44,7 @@ Os testes atuais usam JARs sintéticos/isolados para verificar classificação, 
 
     python -m unittest discover -s tests -v
 
-Na validação local desta branch, os 10 testes de fixture passaram. Eles usam JARs sintéticos e não substituem testes com mods Fabric reais nem a validação oficial cargo horizon-mod check.
+Foi adicionada uma fixture de regressão baseada no manifesto do Witch Client para Minecraft 26.2. O JAR original foi inspecionado localmente, mas não foi enviado ao repositório. A fixture reproduz os metadados relevantes em um JAR sintético; ela ainda precisa ser executada junto da suíte e não substitui testes com mods Fabric reais nem a validação oficial cargo horizon-mod check.
 
 ## Limitações conhecidas
 
@@ -56,7 +56,7 @@ Na validação local desta branch, os 10 testes de fixture passaram. Eles usam J
 
 ## Próximos marcos
 
-1. Testar com JARs Fabric reais, começando por mods estritamente de recursos e dados.
+1. Testar com JARs Fabric reais, começando por mods estritamente de recursos e dados; o Witch Client 1.0.0 já foi inspecionado como caso negativo (exige portagem).
 2. Validar os pacotes gerados com o verificador oficial do Horizon.
 3. Comparar o comportamento/formatos entre Horizon 0.7.7, as fontes atuais e o alvo futuro 26.2.
 4. Só então ampliar a conversão para tipos de dados cuja equivalência esteja documentada.
