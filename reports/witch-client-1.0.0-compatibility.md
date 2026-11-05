@@ -152,3 +152,33 @@ O relatório não altera o APK, não compila native mods e não distribui o JAR 
 - Horizon Android — [Release 0.7.7](https://github.com/Vasysik/horizon-android/releases/tag/v0.7.7)
 
 **Nota de proveniência:** documentação upstream consultada em 5 de novembro de 2026; a branch/documentação upstream é mutável. Para produção, os arquivos de referência e seus commits precisam ser fixados junto à revisão do motor escolhida.
+
+
+## 10. Verificação específica do Horizon Android 0.7.7
+
+**Resultado para a distribuição Android:** não há caminho de carregamento de native mods de terceiros documentado/suportado nessa versão.
+
+As notas oficiais da release `v0.7.7` (2 de novembro de 2026, commit `80700a6`) afirmam explicitamente:
+- Minecraft Java 26.3 é a versão suportada pela release;
+- mods Java Fabric, Forge e NeoForge não são suportados;
+- pacotes sandboxed `.hmod` exigem build compatível de 64 bits;
+- compilação e carregamento arbitrários de native `.hnmod` continuam não suportados no Android.
+
+Fonte primária: [Horizon Android — release v0.7.7](https://github.com/Vasysik/horizon-android/releases/tag/v0.7.7).
+
+### Consequência para o CoordsHud
+
+Mesmo que o motor upstream tenha hooks como HUD, tela, input e renderização, isso **não comprova que um mod de terceiros consiga registrar esses hooks no APK Android 0.7.7**. Como a release não oferece o fluxo de build/carregamento de `.hnmod`, não devemos iniciar uma portagem CoordsHud baseada em hooks nativos para essa build.
+
+A release também declara Minecraft 26.3, enquanto o Witch Client declara `~26.2`. A compatibilidade de versão permanece não demonstrada.
+
+### Limite desta verificação
+
+Este resultado confirma a limitação de suporte publicada pela release oficial. **Não é uma auditoria símbolo-a-símbolo do APK**: a inspeção binária direta do artefato local não foi concluída nesta etapa. Portanto, não afirmamos que o binário não contenha internamente nenhum hook; afirmamos que a release 0.7.7 não oferece suporte documentado para compilar/carregar native `.hnmod` arbitrário no Android.
+
+### Decisão atualizada
+
+1. Não iniciar o CoordsHud como native mod externo para Android 0.7.7.
+2. Manter a especificação funcional do HUD no HHRT, sem prometer execução nessa build.
+3. Investigar uma das duas rotas futuras: suporte oficial a native mods no Android ou integração dos recursos como mods nativos embutidos em uma build própria do launcher, após confirmar licença, toolchain e revisão exata do motor.
+4. Antes de qualquer implementação, fixar uma versão Horizon Android que suporte explicitamente a extensão pretendida e corresponda ao alvo Minecraft escolhido.
