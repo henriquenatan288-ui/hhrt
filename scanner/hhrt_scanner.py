@@ -118,34 +118,38 @@ def scan_jar(path: str) -> dict[str, Any]:
 
         resource_files = [
             n for n in safe_names
-            if n.startswith(("assets/", "data/")) or n == "pack.mcmeta"
+            if n.startswith(("assets/", "data/"))
         ]
         has_java_code = bool(all_classes)
         has_mixins = bool(mixin_configs)
         has_entrypoints = bool(entrypoints)
+        nested_jars = [n for n in safe_names if n.lower().endswith(".jar")]
         native_payloads = [
             n for n in safe_names
             if n.lower().endswith((".so", ".dll", ".dylib"))
         ]
 
-        if not has_java_code and not has_entrypoints and not has_mixins:
-            classification = "resource_candidate"
-            explanation = (
-                "Não foram encontrados bytecode Java, entrypoints ou Mixins; "
-                "revisar recursos antes de converter."
-            )
-        elif has_mixins:
+        if has_mixins:
             classification = "requires_port_or_incompatible"
             explanation = (
                 "Declara Mixins; não pode ser executado diretamente "
                 "pelo runtime nativo do Horizon."
             )
-        else:
+        elif has_java_code or has_entrypoints or nested_jars or native_payloads:
             classification = "requires_port"
             explanation = (
-                "Contém código Java ou entrypoints; exige análise "
-                "e portagem para APIs Horizon."
+                "Contém código Java, entrypoints, JARs aninhados ou bibliotecas nativas; "
+                "exige análise e portagem para APIs Horizon."
             )
+        elif resource_files:
+            classification = "resource_candidate"
+            explanation = (
+                "Contém somente caminhos de assets/data detectados; revisar namespaces "
+                "e formatos antes de converter."
+            )
+        else:
+            classification = "no_portable_content"
+            explanation = "Nenhum asset ou dado portátil foi encontrado no JAR."
 
         return {
             "scanner": {"name": "HHRT Fabric Scanner", "version": "0.1.0"},
@@ -162,6 +166,7 @@ def scan_jar(path: str) -> dict[str, Any]:
                 "safe_files": len(safe_names),
                 "unsafe_paths_ignored": unsafe,
                 "java_classes": len(all_classes),
+                "nested_jars": nested_jars,
                 "resource_files": len(resource_files),
                 "native_libraries": native_payloads,
             },
