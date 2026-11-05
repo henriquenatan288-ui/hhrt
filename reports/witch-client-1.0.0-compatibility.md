@@ -121,7 +121,11 @@ A sequência recomendada reduz risco e permite validar a arquitetura antes dos m
 5. **Módulos de movimento e ações:** só depois de identificar hooks específicos para cada comportamento; testar em mundo local antes de considerar multiplayer.
 6. **X-Ray e scanners:** tratar como projeto separado de renderização/leitura de mundo, com limites de CPU, cache por chunk e telemetria de desempenho.
 
-## 7. Bloqueios e critérios de aceite
+## 7. Modelo de confiança
+
+O formato também muda o perfil de segurança: content mods `.hmod` são dados e executam na sandbox do Horizon; native mods `.hnmod` são código nativo que roda com as permissões da conta do jogador e não é sandboxed. A documentação exige aviso de confiança e revisão antes da publicação no registry. Portanto, uma portagem do Witch para `.hnmod` precisa de revisão de código, escopo mínimo e transparência sobre o que o mod lê ou altera. Não é uma conversão de baixo risco só por deixar de usar Java.
+
+## 8. Bloqueios e critérios de aceite
 
 Antes de iniciar uma portagem de produção:
 
@@ -133,7 +137,7 @@ Antes de iniciar uma portagem de produção:
 - [ ] Validar uma portagem mínima no Android, incluindo renderização GLES/Vulkan e entrada por toque.
 - [ ] Só depois ampliar o scanner para sugerir automaticamente módulos e dependências a portar.
 
-## 8. Conclusão
+## 9. Conclusão
 
 O Witch Client é um **caso de portagem**, não um caso de conversão. A melhor primeira vertical slice é **CoordsHud → Tracers → PlayerESP → ClickGUI**. São recursos úteis para provar o caminho de dados, renderização e UI sem começar por X-Ray, Freecam ou automações de interação.
 
